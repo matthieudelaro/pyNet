@@ -11,6 +11,7 @@ import Activation
 class Net:
     def __init__(self):
         self.sizes = np.array([784, 100, 30, 10])  # size of each layer
+        # self.sizes = np.array([784, 100, 10])  # size of each layer
         self.L = len(self.sizes)  # number of layers
         # print(sizes[:-1])
         self.W = [0.01 * np.random.randn(sizeCurrent, sizePrevious).astype(dtype="double")
@@ -142,7 +143,9 @@ class Net:
             print()
             print("End of epoch ", epoch, ". Timer:", time.clock())
             print("Mean loss :", meanLoss)
+            print("learning rate:", learningRate)
             print("Test success rate:", self.evaluate(dataset))
+            learningRate *= 0.98
 
 
 class TestsSmaller(unittest.TestCase):
