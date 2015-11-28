@@ -20,8 +20,9 @@ class Net:
              in zip(self.sizes[:-1], self.sizes[1:])]
         self.b = [0.01 * np.random.randn(sizeCurrent, 1).astype(dtype="double")
              for sizeCurrent in self.sizes[1:]]
-        self.activationF = Activation.ReLU  # determine activation function
+        self.activationF = Activation.LeakyReLU  # determine activation function
         self.lossF = Loss.Softmax
+        self.dropOut = 0.5
 
     def guessLabel(self, sample):
         """Return the class evaluated by the network for the
@@ -51,9 +52,14 @@ class Net:
         # which is just input data)
         # compute z and activation a
         a = sample  # activation of first layer: input sample
+
+        p = 0.5
+        # dropMasks = [(np.random.rand(*aa.shape) < p)/p for aa in ass]
         for l, (W, b) in enumerate(zip(self.W, self.b)):
+        # for l, (W, b, dropMask) in enumerate(zip(self.W, self.b, dropMasks)):
             z = W@a + b
             a = self.activationF.f(z)
+            # a *= dropMask
             # print("z = ", z[0:3].T, "...")
             # print("a = ", a[0:3].T, "...")
             # print()
