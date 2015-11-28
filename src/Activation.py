@@ -1,5 +1,8 @@
+"""Activation module contains activation functions."""
+
 import numpy as np
 import unittest
+
 
 class Sigmoid:
     def f(z):
@@ -9,33 +12,31 @@ class Sigmoid:
         sigmoidResult = 1.0/(1.0+np.exp(-z))
         return sigmoidResult*(1-sigmoidResult)
 
+    def name():
+        return "Sigmoid"
+
 
 class LeakyReLU:
     def f(z):
-        # return np.max(0.1 * z, z)
         return z * (z > 0) + 0.1 * z * (z < 0)
 
     def fprime(z):
         return 0.1 * (z <= 0) + 1 * (z > 0)
 
+    def name():
+        return "LeakyReLU"
+
 
 class ReLU:
     def f(z):
         # return np.maximum(0, z)
-        return z * (z > 0)
-
-    # def fprime(z):
-        # return np.power(z, np.zeros_like(z))
+        return z * (z > 0)  # faster than np.max implementation
 
     def fprime(z):
         return 1 * (z > 0)
-        # res = np.empty_like(z)
-        # for i in range(len(z)):
-        #     if z[i] > 0:
-        #         res[i] = 1
-        #     else:
-        #         res[i] = 0
-        # return res
+
+    def name():
+        return "ReLU"
 
 
 class Copy:
@@ -46,6 +47,9 @@ class Copy:
 
     def fprime(z):
         return np.ones_like(z)
+
+    def name():
+        return "Copy"
 
 
 class Tests(unittest.TestCase):
