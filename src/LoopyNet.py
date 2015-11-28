@@ -44,78 +44,64 @@ class Net:
                 success += 1
         return success / len(dataset.tests)
 
-    def forwardBackward(self, sample, label):#, ass, zss):
-        # sample = np.array([sample]).T  # todo: change the shape of the samples
-        ass = [sample]  # stores activation (=f(z)) for each layer
-        zss = []  # stores z (=W@a + b) for each layer
-
+    def forwardBackward(self, sample, label, ass, zss, dWs, dbs):
         # forward pass: for each layer (except for the first layer
         # which is just input data)
         # compute z and activation a
         a = sample  # activation of first layer: input sample
-        for W, b in zip(self.W, self.b):
+        for l, (W, b) in enumerate(zip(self.W, self.b)):
             z = W@a + b
             a = self.activationF.f(z)
-            ass.append(a)
-            zss.append(z)
+            ass[l] = a
+            zss[l] = z
 
         # compute loss and loss gradient
         loss = self.lossF.f(a, label)
         # print("loss:", loss)
 
         dError = self.lossF.fprime(ass[-1], label) * self.activationF.fprime(zss[-1])
-        # print("dError:", dError.reshape((10)))
-        # print("label:", label)
 
         # propagate the error back
-        dWs = [np.zeros_like(W) for W in self.W]  # for each layer, stores dW, ie how much weights should be modified
-        dbs = [np.zeros_like(b) for b in self.b]  # for each layer, stores db, ie how much biases should be modified
-
         for l in reversed(range(len(self.W))):
+            # print()
             # retrieve required values
             if l < len(self.W)-1:
                 W_lPlus1 = self.W[l+1]
 
                 dError_lPlus1 = dError
+                # print("Reading zss at index:", l)
                 z = zss[l]
 
                 # compute the error
                 dError = (W_lPlus1.T @ dError_lPlus1) * self.activationF.fprime(z)
 
-            # if l != 0:
-            #     a_lMinus1 = ass[l-1]
-            # else:
-            #     a_lMinus1 = sample
-            a_lMinus1 = ass[l]
+            if l != 0:
+                # print("Reading ass as index:", l-1)
+                a_lMinus1 = ass[l-1]
+            else:
+                # print("Reading sample because index", l-1)
+                a_lMinus1 = sample
+            # a_lMinus1 = ass[l]
 
             # print("dW <= a_lMinus1 dError :", dWs[l].shape, "<=", a_lMinus1.shape, dError.shape)
             # dW = a_lMinus1 * dError
-            dW = dError@a_lMinus1.T
-            db = dError
+            dWs[l] += dError@a_lMinus1.T
+            dbs[l] += dError
+        return loss
 
-            dWs[l] = dW
-            dbs[l] = db
-        return dWs, dbs, loss
-
-    def batchForwardBackward(self, batch, learningRate):
-        dWs = [np.zeros_like(W) for W in self.W]  # for each layer, stores dW, ie how much weights should be modified
-        dbs = [np.zeros_like(b) for b in self.b]  # for each layer, stores db, ie how much biases should be modified
+    def batchForwardBackward(self, batch, learningRate, ass, zss, dWs, dbs):
+        for dW in dWs:
+            dW.fill(0)
+        for db in dbs:
+            db.fill(0)
 
         # forwardBackward on each sample, and sum up modifications suggested by the gradients
         iterations = 0
         sumLoss = 0
         for sample, label, labelScalar in batch:
             iterations += 1
-            dWsCurrent, dbsCurrent, loss = self.forwardBackward(sample, label)
-            for summ, current in zip(dWs, dWsCurrent):
-                summ += current
-            for summ, current in zip(dbs, dbsCurrent):
-                summ += current
-            sumLoss += loss
-        # print("len(samples)", len(samples))
-        # print("len(labels)", len(labels))
+            sumLoss += self.forwardBackward(sample, label, ass, zss, dWs, dbs)
         meanLoss = sumLoss/iterations
-        # print("mean loss over batch of", iterations, ":", meanLoss)
 
         # modify weigths and biases according to previous backpropagations
         for W, dW in zip(self.W, dWs):
@@ -126,28 +112,31 @@ class Net:
         return meanLoss
 
     def train(self, dataset, epochs, batchSize, learningRate):
+        zss = [np.empty((layerSize, 1)).astype(dtype="double")  # for each layer, stores the value, ie z = W@a + b
+               for layerSize in self.sizes[1:]]
+        ass = [np.empty((layerSize, 1)).astype(dtype="double")  # for each layer, stores the activation, ie a = f(z)
+               for layerSize in self.sizes[1:]]
+        dWs = [np.zeros_like(W) for W in self.W]  # for each layer, stores dW, ie how much weights should be modified
+        dbs = [np.zeros_like(b) for b in self.b]  # for each layer, stores db, ie how much biases should be modified
+
         for epoch in range(epochs):
             random.shuffle(dataset.train)
             batchBeginning = 0
             batchEnd = min(len(dataset.train), batchBeginning + batchSize)
-            # batchEnd = min(len(dataset.trainX-1), batchBeginning + batchSize)
 
             iterations = 0
             sumLoss = 0
             while (batchEnd - batchBeginning) >= 2:
                 iterations += 1
-                # print("Running batch over", batchBeginning, batchEnd)
                 batchLoss = self.batchForwardBackward(
                     dataset.train[batchBeginning:batchEnd],
-                    # dataset.trainY[batchBeginning:batchEnd],
-                    learningRate
+                    learningRate,
+                    ass, zss, dWs, dbs
                 )
-                # print("batch loss:", batchLoss)
                 sumLoss += batchLoss
 
                 batchBeginning = batchEnd
                 batchEnd = min(len(dataset.train), batchBeginning + batchSize)
-                # batchEnd = min(len(dataset.trainX-1), batchBeginning + batchSize)
 
             meanLoss = sumLoss / iterations
             print()
@@ -155,17 +144,6 @@ class Net:
             print("Mean loss :", meanLoss)
             print("Test success rate:", self.evaluate(dataset))
 
-
-
-
-            # lastBatchOfEpoch = False
-
-            # while !lastBatchOfEpoch:
-            # batchEnd = max(len(dataSet.trainX-1), batchBeginning + batchSize)
-
-
-
-    # data = SmallerDataset()
 
 class TestsSmaller(unittest.TestCase):
     def setUp(self):
@@ -179,7 +157,14 @@ class TestsSmaller(unittest.TestCase):
         # pass
 
     # def test_backprop(self):
-        # self.net.forwardBackward(self.data.trainX[0], self.data.trainY[0])
+    #     ass = [np.empty((layerSize, 1)).astype(dtype="double")
+    #            for layerSize in self.net.sizes[1:]]
+    #     zss = [np.empty((layerSize, 1)).astype(dtype="double")
+    #            for layerSize in self.net.sizes[1:]]
+    #     dWs = [np.zeros_like(W) for W in self.net.W]  # for each layer, stores dW, ie how much weights should be modified
+    #     dbs = [np.zeros_like(b) for b in self.net.b]  # for each layer, stores db, ie how much biases should be modified
+
+    #     self.net.forwardBackward(self.data.train[0][0], self.data.train[0][1], ass, zss, dWs, dbs)
 
     # def test_batchBackprop(self):
     #     batch1 = 90
