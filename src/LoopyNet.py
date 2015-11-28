@@ -10,6 +10,7 @@ import Activation
 
 class Net:
     def __init__(self):
+        # self.sizes = np.array([784, 784, 784, 10])  # size of each layer
         self.sizes = np.array([784, 100, 30, 10])  # size of each layer
         # self.sizes = np.array([784, 100, 10])  # size of each layer
         self.L = len(self.sizes)  # number of layers
@@ -19,7 +20,7 @@ class Net:
              in zip(self.sizes[:-1], self.sizes[1:])]
         self.b = [0.01 * np.random.randn(sizeCurrent, 1).astype(dtype="double")
              for sizeCurrent in self.sizes[1:]]
-        self.activationF = Activation.Sigmoid  # determine activation function
+        self.activationF = Activation.ReLU  # determine activation function
         self.lossF = Loss.Softmax
 
     def guessLabel(self, sample):
@@ -53,14 +54,27 @@ class Net:
         for l, (W, b) in enumerate(zip(self.W, self.b)):
             z = W@a + b
             a = self.activationF.f(z)
+            # print("z = ", z[0:3].T, "...")
+            # print("a = ", a[0:3].T, "...")
+            # print()
             ass[l] = a
             zss[l] = z
 
         # compute loss and loss gradient
-        loss = self.lossF.f(a, label)
-        # print("loss:", loss)
+        # exp_scores = np.exp(a)
+        # probs = exp_scores / np.sum(exp_scores)
+        # corect_logprobs = -np.log(probs)
+        # data_loss = np.sum(corect_logprobs) / 10
+        # loss = data_loss
+        # dError = corect_logprobs * self.activationF.fprime(zss[-1])
 
+        # print("scores:", probs)
+        loss = self.lossF.f(a, label)
+        # loss = 0.42
         dError = self.lossF.fprime(ass[-1], label) * self.activationF.fprime(zss[-1])
+        # print("z = ", zss[-1][0:3].T, "...")
+        # print("r' = ", self.activationF.fprime(zss[-1])[0:3].T, "...")
+        # print()
 
         # propagate the error back
         for l in reversed(range(len(self.W))):
@@ -128,6 +142,10 @@ class Net:
             iterations = 0
             sumLoss = 0
             while (batchEnd - batchBeginning) >= 2:
+                # print()
+                # print("Beginning of batch ", iterations, "/", epoch, ". Timer:", time.clock())
+                # print("learning rate:", learningRate)
+                # print("Test success rate:", self.evaluate(dataset))
                 iterations += 1
                 batchLoss = self.batchForwardBackward(
                     dataset.train[batchBeginning:batchEnd],
@@ -135,6 +153,7 @@ class Net:
                     ass, zss, dWs, dbs
                 )
                 sumLoss += batchLoss
+                # print("Loss of batch:", batchLoss)
 
                 batchBeginning = batchEnd
                 batchEnd = min(len(dataset.train), batchBeginning + batchSize)
@@ -145,42 +164,13 @@ class Net:
             print("Mean loss :", meanLoss)
             print("learning rate:", learningRate)
             print("Test success rate:", self.evaluate(dataset))
-            learningRate *= 0.98
+            learningRate *= 0.97
 
 
-class TestsSmaller(unittest.TestCase):
-    def setUp(self):
-        # self.data = Dataset.SmallerDataset()
-        self.data = Dataset.loadSmallPickledData()
-        self.net = Net()
-
-    # def test_evaluateRandom(self):
-        # res = self.net.guessLabel(self.data.trainX[0])
-        # print(res)
-        # pass
-
-    # def test_backprop(self):
-    #     ass = [np.empty((layerSize, 1)).astype(dtype="double")
-    #            for layerSize in self.net.sizes[1:]]
-    #     zss = [np.empty((layerSize, 1)).astype(dtype="double")
-    #            for layerSize in self.net.sizes[1:]]
-    #     dWs = [np.zeros_like(W) for W in self.net.W]  # for each layer, stores dW, ie how much weights should be modified
-    #     dbs = [np.zeros_like(b) for b in self.net.b]  # for each layer, stores db, ie how much biases should be modified
-
-    #     self.net.forwardBackward(self.data.train[0][0], self.data.train[0][1], ass, zss, dWs, dbs)
-
-    # def test_batchBackprop(self):
-    #     batch1 = 90
-    #     batch2 = 90
-    #     self.net.batchForwardBackward(self.data.trainX[:batch1], self.data.trainY[:batch1], 0.01)
-    #     self.net.batchForwardBackward(self.data.trainX[batch1:batch1+batch2], self.data.trainY[batch1:batch1+batch2], 0.01)
-
-    def test_train(self):
-        self.net.train(self.data, 30, 50, 3)
-
-# class TestsBigger(unittest.TestCase):
+# class TestsSmaller(unittest.TestCase):
 #     def setUp(self):
-#         self.data = Dataset.loadPickledData()
+#         # self.data = Dataset.SmallerDataset()
+#         self.data = Dataset.loadSmallPickledData()
 #         self.net = Net()
 
 #     # def test_evaluateRandom(self):
@@ -189,7 +179,14 @@ class TestsSmaller(unittest.TestCase):
 #         # pass
 
 #     # def test_backprop(self):
-#         # self.net.forwardBackward(self.data.trainX[0], self.data.trainY[0])
+#     #     ass = [np.empty((layerSize, 1)).astype(dtype="double")
+#     #            for layerSize in self.net.sizes[1:]]
+#     #     zss = [np.empty((layerSize, 1)).astype(dtype="double")
+#     #            for layerSize in self.net.sizes[1:]]
+#     #     dWs = [np.zeros_like(W) for W in self.net.W]  # for each layer, stores dW, ie how much weights should be modified
+#     #     dbs = [np.zeros_like(b) for b in self.net.b]  # for each layer, stores db, ie how much biases should be modified
+
+#     #     self.net.forwardBackward(self.data.train[0][0], self.data.train[0][1], ass, zss, dWs, dbs)
 
 #     # def test_batchBackprop(self):
 #     #     batch1 = 90
@@ -197,33 +194,75 @@ class TestsSmaller(unittest.TestCase):
 #     #     self.net.batchForwardBackward(self.data.trainX[:batch1], self.data.trainY[:batch1], 0.01)
 #     #     self.net.batchForwardBackward(self.data.trainX[batch1:batch1+batch2], self.data.trainY[batch1:batch1+batch2], 0.01)
 
-#     def test_ReLU(self):
-#         self.assertTrue(np.allclose(Activation.ReLU.fprime(np.array([-2, -1, 0, 1, 2]).reshape(5, 1)),
-#                         np.array([[0],
-#                                  [0],
-#                                  [0],
-#                                  [1],
-#                                  [1]])))
-#         self.assertTrue(np.allclose(Activation.ReLU.fprime(np.array([-2, -1, 0, 1, 2])),
-#                         np.array([0,
-#                                   0,
-#                                   0,
-#                                   1,
-#                                   1])))
-#         # print(Activation.ReLU.fprime(np.array([[-2, -1, 0, 1, 2]])))
-#         # self.assertTrue(np.allclose(Activation.ReLU.fprime(np.array([[-2, -1, 0, 1, 2]])),
-#                         # np.array([[0],
-#                         #           [0],
-#                         #           [0],
-#                         #           [1],
-#                         #           [1]])))
-#         # self.assertEquals()
+#     def test_train(self):
+#         self.net.train(self.data, 30, 50, 0.3)
+
+class TestsBigger(unittest.TestCase):
+    def setUp(self):
+        self.data = Dataset.loadPickledData()
+        self.net = Net()
+
+    # def test_evaluateRandom(self):
+        # res = self.net.guessLabel(self.data.trainX[0])
+        # print(res)
+        # pass
+
+    # def test_backprop(self):
+        # self.net.forwardBackward(self.data.trainX[0], self.data.trainY[0])
+
+    # def test_batchBackprop(self):
+    #     batch1 = 90
+    #     batch2 = 90
+    #     self.net.batchForwardBackward(self.data.trainX[:batch1], self.data.trainY[:batch1], 0.01)
+    #     self.net.batchForwardBackward(self.data.trainX[batch1:batch1+batch2], self.data.trainY[batch1:batch1+batch2], 0.01)
+
+    def test_ReLU(self):
+        self.assertTrue(np.allclose(Activation.ReLU.f(np.array([-2, -1, 0, 1, 2]).reshape(5, 1)),
+                        np.array([[0],
+                                 [0],
+                                 [0],
+                                 [1],
+                                 [2]])))
+        self.assertTrue(np.allclose(Activation.ReLU.fprime(np.array([-2, -1, 0, 1, 2]).reshape(5, 1)),
+                        np.array([[0],
+                                 [0],
+                                 [0],
+                                 [1],
+                                 [1]])))
+        self.assertTrue(np.allclose(Activation.ReLU.fprime(np.array([-2, -1, 0, 1, 2])),
+                        np.array([0,
+                                  0,
+                                  0,
+                                  1,
+                                  1])))
+        # print(Activation.ReLU.fprime(np.array([[-2, -1, 0, 1, 2]])))
+        # self.assertTrue(np.allclose(Activation.ReLU.fprime(np.array([[-2, -1, 0, 1, 2]])),
+                        # np.array([[0],
+                        #           [0],
+                        #           [0],
+                        #           [1],
+                        #           [1]])))
+        # self.assertEquals()
 
 #     def test_train(self):
-#         self.net.train(self.data, 30, 100, 3)
+#         self.net.train(self.data, 30, 100, 0.3)
 #         # print()
 #         pass
 
 
+def runSmall():
+    data = Dataset.loadSmallPickledData()
+    net = Net()
+    net.train(data, 30, 50, 0.1)
+
+
+def runBig():
+    data = Dataset.loadPickledData()
+    net = Net()
+    net.train(data, 30, 100, 0.1)
+
+
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+    # runSmall()
+    runBig()

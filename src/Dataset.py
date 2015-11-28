@@ -14,6 +14,8 @@ def loadPickledData():
     f_read = open('../data/pickledMNIST/data.pkl', 'br')
     data = pickle.load(f_read)
     f_read.close()
+    for i in range(len(data.train)):
+        data.train[i] = data.train[i][0].astype(dtype="double") / 255, data.train[i][1], data.train[i][2]
     print("Dataset loaded from file. Timer:", time.clock())
     return data
 
@@ -22,6 +24,9 @@ def loadSmallPickledData():
     f_read = open('../data/pickledSmallMNIST/data.pkl', 'br')
     data = pickle.load(f_read)
     f_read.close()
+    for i in range(len(data.train)):
+        data.train[i] = data.train[i][0].astype(dtype="double") / 255, data.train[i][1], data.train[i][2]
+    # print(data.train[0])
     print("Dataset loaded from file. Timer:", time.clock())
     return data
 
@@ -185,12 +190,14 @@ class TestsPickled(unittest.TestCase):
         print(len(self.data.valid))
         print(len(self.data.tests))
         print("shape of example input:", self.data.train[0][0].shape)
+        print("average of values of training example 10", self.data.train[10][0].sum() / 784)
 
     def test_big(self):
         self.data = loadPickledData()
         print(len(self.data.train))
         print(len(self.data.valid))
         print(len(self.data.tests))
+        print("average of values of training example 10", self.data.train[10][0].sum() / 784)
 
 if __name__ == '__main__':
     unittest.main()
