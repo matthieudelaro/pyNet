@@ -1,6 +1,6 @@
 # pyNet
 My own implementation of a neural network in Python for MNIST dataset.
-It requires Python 3.5 (@ operator for dot product).
+It requires Python 3.5 (@ operator for dot product), and idx2numpy package.
 To train the network, run ./src/LoopyNet.py
 
 ##File Architecture:

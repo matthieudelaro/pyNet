@@ -6,6 +6,7 @@ import Loss
 import time
 import random
 import Activation
+import math
 
 
 class Net:
@@ -23,6 +24,7 @@ class Net:
         self.lossF = Loss.Softmax
         self.dropOut = 1  # [0-1]. 1 : no dropout
         self.epochsStats = []
+        self.learningRateStep = 5
 
     def guessLabel(self, sample):
         """Return the class evaluated by the network for the
@@ -86,6 +88,10 @@ class Net:
                 a_lMinus1 = sample
             # a_lMinus1 = ass[l]
 
+            if self.dropOut < 1:
+                # print(dError.shape, dropMasks[l].shape)
+                dError *= dropMasks[l]
+
             # print("dW <= a_lMinus1 dError :", dWs[l].shape, "<=", a_lMinus1.shape, dError.shape)
             # dW = a_lMinus1 * dError
             dWs[l] += dError@a_lMinus1.T
@@ -127,6 +133,7 @@ class Net:
         print("\tActivation function:", self.activationF.name())
         print("\tLoss function:", self.lossF.name())
         print("\tLearning rate:", learningRate)
+        print("\tLearning rate step:", self.learningRateStep)
         print("\tDropout percentage:", self.dropOut, "(From 0 to 1. 1 means 'no dropout')")
         print("\tBatch size:", batchSize)
         print("\tEpochs:", epochs)
@@ -171,7 +178,8 @@ class Net:
             successRate = self.evaluate(dataset)
             print("Test success rate:", successRate)
             self.epochsStats.append((epochBeginTime, epochDuration, epochEndTime, meanLoss, learningRate, successRate))
-            learningRate *= 0.97
+            # learningRate *= 0.97
+            learningRate *= 0.97**math.floor(epoch/self.learningRateStep)
 
 
 class TestsSmaller(unittest.TestCase):
