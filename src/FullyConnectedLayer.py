@@ -41,13 +41,13 @@ class FCLayer(Layer.Layer):
         are given as in ass[l].
         dError of the top layer is accessible as dErrors[l+1]."""
         #            W_lPlus1.T@dErrors[l+1]
-        dErrors[l] = dErrorLeftOperand     * self.activationF.fprime(bundle.z)
+        dErrors[l] = dErrorLeftOperand     * self.activationF.fprime(bundle.z)  # equation BP2
 
         if self.dropOut < 1:
             dErrors[l] *= bundle.dropMask
 
-        bundle.dW = dErrors[l]@ass[l-1].T
-        bundle.db = dErrors[l]
+        bundle.dW = dErrors[l]@ass[l-1].T  # equation BP4
+        bundle.db = dErrors[l]  # equation BP3
 
         return self.W.T@dErrors[l]  # return dErrorLeftOperand for next layer
 

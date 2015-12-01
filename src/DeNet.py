@@ -63,7 +63,7 @@ class DeNet:
         # compute loss and gradient
         loss = self.lossF.f(ass[-1], label)
         dErrors = [np.empty_like(a) for a in ass]
-        dErrorLeftOperand = self.lossF.fprime(ass[-1], label)
+        dErrorLeftOperand = self.lossF.fprime(ass[-1], label)  # left operand of equation BP1
 
         # propagate the error back
         for l in reversed(range(1, len(self.layers))):

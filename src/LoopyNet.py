@@ -67,7 +67,7 @@ class LoopyNet:
 
         # compute loss and loss gradient
         loss = self.lossF.f(a, label)
-        dError = self.lossF.fprime(ass[-1], label) * self.activationF.fprime(zss[-1])
+        dError = self.lossF.fprime(ass[-1], label) * self.activationF.fprime(zss[-1])  # equation BP1
 
         # propagate the error back
         for l in reversed(range(len(self.W))):
@@ -81,7 +81,7 @@ class LoopyNet:
                 z = zss[l]
 
                 # compute the error
-                dError = (W_lPlus1.T @ dError_lPlus1) * self.activationF.fprime(z)
+                dError = (W_lPlus1.T @ dError_lPlus1) * self.activationF.fprime(z)  # equation BP2
 
             if l != 0:
                 # print("Reading ass as index:", l-1)
@@ -97,8 +97,8 @@ class LoopyNet:
 
             # print("dW <= a_lMinus1 dError :", dWs[l].shape, "<=", a_lMinus1.shape, dError.shape)
             # dW = a_lMinus1 * dError
-            dWs[l] += dError@a_lMinus1.T
-            dbs[l] += dError
+            dWs[l] += dError@a_lMinus1.T  # equation BP4
+            dbs[l] += dError  # equation BP3
         return loss
 
     def batchForwardBackward(self, batch, learningRate, ass, zss, dWs, dbs):
