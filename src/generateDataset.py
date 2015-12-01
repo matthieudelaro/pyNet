@@ -19,10 +19,10 @@ def generateOptimizedDataSet():
     print()
 
     print("Splitting dataset into train/valid/tests, divide pixel values by 255...")
-    ratio = 0.9  # percentageOfTrainingSetForValidation
+    ratio = 0.96  # percentageOfTrainingSetForValidation
 
     train = [()] * int(len(origin.trainX)*ratio)
-    valid = [()] * int(len(origin.trainX)*(1-ratio) + 1)
+    valid = [()] * int(len(origin.trainX)*(1-ratio))
     tests = [()] * len(origin.testX)
 
     for i in range(len(train)):

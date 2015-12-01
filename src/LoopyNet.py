@@ -146,7 +146,9 @@ class LoopyNet:
         print("\tDropout percentage:", self.dropOut, "(From 0 to 1. 1 means 'no dropout')")
         print("\tBatch size:", batchSize)
         print("\tEpochs:", epochs)
-        print("\tTraining size:", len(dataset.train))
+        print("\tValidation set size:", len(dataset.valid))
+        print("\tTraining set size:", len(dataset.train))
+        print("\tTest set size:", len(dataset.tests))
         print()
 
         for epoch in range(1, epochs + 1):
@@ -242,6 +244,6 @@ def runBig():
 
 if __name__ == '__main__':
     # unittest.main()
-    runSmall()
+    # runSmall()
     # runMedium()
-    # runBig()
+    runBig()
