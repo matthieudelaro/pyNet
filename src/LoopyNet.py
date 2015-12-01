@@ -9,7 +9,7 @@ import Activation
 import math
 
 
-class Net:
+class LoopyNet:
     def __init__(self):
         # self.sizes = np.array([784, 784, 784, 10])  # size of each layer
         self.sizes = np.array([784, 100, 30, 10])  # size of each layer
@@ -45,6 +45,9 @@ class Net:
         return success / len(dataset.tests)
 
     def forwardBackward(self, sample, label, ass, zss, dWs, dbs):
+        """Performs a forward pass and a backward pass over the network with
+        given sample. Returns the loss relative to the given sample."""
+
         # forward pass: for each layer (except for the first layer
         # which is just input data)
         # compute z and activation a
@@ -99,6 +102,9 @@ class Net:
         return loss
 
     def batchForwardBackward(self, batch, learningRate, ass, zss, dWs, dbs):
+        """Trains the network over given batch. Called by train(). Returns the mean
+        loss relative to samples of the batch."""
+
         for dW in dWs:
             dW.fill(0)
         for db in dbs:
@@ -121,6 +127,9 @@ class Net:
         return meanLoss
 
     def train(self, dataset, epochs, batchSize, learningRate):
+        """Trains the network using the training set of
+        the given dataset, during given amount of epochs, using given
+        batch size, and beginning with given learning rate."""
         zss = [np.empty((layerSize, 1)).astype(dtype="double")  # for each layer, stores the value, ie z = W@a + b
                for layerSize in self.sizes[1:]]
         ass = [np.empty((layerSize, 1)).astype(dtype="double")  # for each layer, stores the activation, ie a = f(z)
@@ -128,7 +137,7 @@ class Net:
         dWs = [np.zeros_like(W) for W in self.W]  # for each layer, stores dW, ie how much weights should be modified
         dbs = [np.zeros_like(b) for b in self.b]  # for each layer, stores db, ie how much biases should be modified
 
-        print("\nTraining with configuration:")
+        print("\nLoopyNet training with configuration:")
         print("\tSize of layers:", self.sizes)
         print("\tActivation function:", self.activationF.name())
         print("\tLoss function:", self.lossF.name())
@@ -186,7 +195,7 @@ class TestsSmaller(unittest.TestCase):
     def setUp(self):
         # self.data = Dataset.SmallerDataset()
         self.data = Dataset.loadSmallPickledData()
-        self.net = Net()
+        self.net = LoopyNet()
 
     def test_evaluateRandom(self):
         res = self.net.guessLabel(self.data.trainX[0])
@@ -215,24 +224,24 @@ class TestsSmaller(unittest.TestCase):
 
 def runSmall():
     data = Dataset.loadSmallPickledData()
-    net = Net()
+    net = LoopyNet()
     net.train(data, 30, 50, 0.1)
 
 
 def runMedium():
     data = Dataset.loadMediumPickledData()
-    net = Net()
+    net = LoopyNet()
     net.train(data, 30, 100, 0.1)
 
 
 def runBig():
     data = Dataset.loadPickledData()
-    net = Net()
+    net = LoopyNet()
     net.train(data, 30, 100, 0.1)
 
 
 if __name__ == '__main__':
     # unittest.main()
-    # runSmall()
+    runSmall()
     # runMedium()
-    runBig()
+    # runBig()
