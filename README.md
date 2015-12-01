@@ -7,8 +7,10 @@ The first network, LoopyNet, is inspired from the book by Michael Nielsen : http
 It is composed of fully connected layers only, represented by the weights and biases required to compute the forward pass and backward pass in a loop. Main mathematical formulas applied and refered to in the source code are the following :
 ![alt tag](http://neuralnetworksanddeeplearning.com/images/tikz21.png)
 
-Optimization have been done by allocating numpy arrays only once when possible, instead of doing it for each forward/backward computation. It provides gradient descent backward propagation, batches, Softmax loss, ReLU/LeakyReLU/Sigmoid activation functions, drop out, and learning rate decay.
+Optimization have been done by allocating numpy arrays only once when possible, instead of doing it for each forward/backward computation. It provides gradient descent backward propagation, batches, Softmax loss, ReLU/LeakyReLU/Sigmoid activation functions, drop out, and learning rate decay. Those parameters can be changed in the constructor of LoopyNet. 
 It achieves 97-98% accuracy with 3 input layers (140 hidden neurons : 100 + 30 + 10 neurons).
+
+As of commit a648ea9626624e4df991798126a50fe8159ea4d8, drop out does not significatively improve the performances. (Maybe because the quantity of neurons is really limited?)
 
 ## DeNet
 While LoopyNet is almost self contained and rather easy to read, it lakes modularity. Its design is not easily parallelizable, and it assumes that all layers are fully connected layers. They should all have fully connected connections, with weights and biases, the same activation function, etc.
@@ -17,6 +19,8 @@ DeNet is designed to solve this problem by implementing layers in a separate cla
 
 A FCLayer class implements fully connected layer that work the same as those implemented in LoopyNet.
 Classes to implement convolutional layers, pooling layers, and ReLU layers are yet to be implemented. They should inherite from the class Layer, which behaves as an interface.
+
+As of commit a648ea9626624e4df991798126a50fe8159ea4d8, DeNet is slower than LoopyNet. It must be due to poor memory management. Also, it could be improved by using numpy implementation from PyCUDA.
 
 ### FCLayer : Fully Connected Layer
 FCLayer stores its weights and biases as member variables. In fact, those are read only during a batch evaluation, so those can be accessed by several threads at the same time. However, the activation is stored in a numpy array provided to the method Layer.forward(), so that it can be passed to the next layer. Other data, such as weight updates and biases updates are stored in a bundle.
