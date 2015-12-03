@@ -51,5 +51,6 @@ by running ./downloadAssets.sh.
 - Deep Learning For Computer Vision, KAIST class, SIIT laboratory
 - Book by Michael Nielsen : http://neuralnetworksanddeeplearning.com/chap1.html
 - Notes of the Stanford CS class CS231n: Convolutional Neural Networks for Visual Recognition : http://cs231n.github.io/
+- MNIST dataset : http://yann.lecun.com/exdb/mnist/
 
 
